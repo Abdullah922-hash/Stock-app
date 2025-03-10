@@ -30,7 +30,7 @@ def show_login_page():
         if username == "admin" and password == "abc123":
             st.session_state["logged_in"] = True
             st.success("Login successful!")
-            st.session_state["login_page_shown"] = False  # Hide the login page
+            #st.session_state["login_page_shown"] = False  # Hide the login page
             st.rerun()  # Force the app to rerun and go to main page
             #st.experimental_rerun()  # Rerun to navigate to main app
         else:
