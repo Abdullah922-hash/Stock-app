@@ -11,7 +11,7 @@ st.set_page_config(layout="wide")
 @st.cache_data
 def load_data():
     # Load your data from the CSV file
-    df = pd.read_csv('stockreportmarch5.csv')  # Make sure to replace 'stock_report_feb2025.csv' with your file path
+    df = pd.read_csv('stockreport10m.csv')  # Make sure to replace 'stock_report_feb2025.csv' with your file path
     return df
 
 # Load data
