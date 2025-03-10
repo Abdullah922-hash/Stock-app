@@ -149,7 +149,7 @@ df_pivoted = df_pivoted.reset_index()
 
 # Display header and some info
 st.markdown("""
-    <h2 style='color: #2a9d8f;'>Inventory Management Application - 5th March 2025</h1>
+    <h2 style='color: #2a9d8f;'>Inventory Management Application</h1>
     """, unsafe_allow_html=True)
 
 # Add a separator line for clarity
