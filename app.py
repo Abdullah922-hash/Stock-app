@@ -5,6 +5,9 @@ import seaborn as sns
 import numpy as np
 from datetime import datetime
 
+
+st.set_page_config(layout="wide")
+
 st.markdown("""
     <style>
         .css-1q7xtu2, .css-1v0mbdj, .css-1ytij9s, .css-ffhzg2 {
@@ -14,7 +17,6 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-st.set_page_config(layout="wide")
 
 
 # Load the CSV data
