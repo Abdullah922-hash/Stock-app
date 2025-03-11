@@ -5,38 +5,14 @@ import seaborn as sns
 import numpy as np
 from datetime import datetime
 
-
 st.set_page_config(layout="wide")
-
-st.markdown("""
-    <style>
-        /* Hide GitHub badge */
-        .css-1q7xtu2 {
-            display: none;
-        }
-        /* Hide star button */
-        .css-1v0mbdj {
-            display: none;
-        }
-        /* Hide 3 dots menu */
-        .css-1ytij9s {
-            display: none;
-        }
-        /* Hide Streamlit footer */
-        footer {
-            display: none;
-        }
-    </style>
-""", unsafe_allow_html=True)
-
-
 
 
 # Load the CSV data
 @st.cache_data
 def load_data():
     # Load your data from the CSV file
-    df = pd.read_csv('stockreport10m.csv')  # Make sure to replace 'stock_report_feb2025.csv' with your file path
+    df = pd.read_csv('stock.csv')  # Make sure to replace 'stock_report_feb2025.csv' with your file path
     return df
 
 
@@ -54,7 +30,7 @@ def show_login_page():
         if username == "admin" and password == "abc123":
             st.session_state["logged_in"] = True
             st.success("Login successful!")
-            #st.session_state["login_page_shown"] = False  # Hide the login page
+            st.session_state["login_page_shown"] = False  # Hide the login page
             st.rerun()  # Force the app to rerun and go to main page
             #st.experimental_rerun()  # Rerun to navigate to main app
         else:
@@ -64,7 +40,7 @@ def show_login_page():
 # Main App Page
 def show_main_app_page():
     st.markdown("""
-    <h2 style='color: #2a9d8f;'>Inventory Management Application - 10th March 2025</h1>
+    <h2 style='color: #2a9d8f;'>Inventory Management Application - 11th March 2025</h1>
     """, unsafe_allow_html=True)
 
     # Load data
@@ -112,9 +88,11 @@ def show_main_app_page():
         df = df[df['ItemName'].isin(selected_item)]
 
 
+# 1st Table
+
     # Group by 'DesignNo', 'Color', and 'Sizes', and sum the 'NetSales' and 'AvailableforSales'
     df_grouped_sold = df.groupby(['DesignNo', 'Color', 'Sizes'], as_index=False)['NetSales'].sum()
-    df_grouped_OH = df.groupby(['DesignNo', 'Color', 'Sizes'], as_index=False)['BalanceStock'].sum()
+    df_grouped_OH = df.groupby(['DesignNo', 'Color', 'Sizes'], as_index=False)['AvailableforSales'].sum()
 
     # Merge the two dataframes on 'DesignNo', 'Color', and 'Sizes'
     df_merged = pd.merge(df_grouped_sold, df_grouped_OH, on=['DesignNo', 'Color', 'Sizes'], how='inner')
@@ -127,9 +105,9 @@ def show_main_app_page():
 
     # Quantity or Price grouping logic
     if filter_type == 'Quantity':
-        # Group by 'DesignNo', 'Color', 'Sizes', and 'SalesThrough', and sum the 'NetSales' and 'BalanceStock'
+        # Group by 'DesignNo', 'Color', 'Sizes', and 'SalesThrough', and sum the 'NetSales' and 'AvailableforSales'
         df_grouped_sold = df.groupby(['DesignNo', 'Color', 'Sizes'], as_index=False)['NetSales'].sum()
-        df_grouped_OH = df.groupby(['DesignNo', 'Color', 'Sizes'], as_index=False)['BalanceStock'].sum()
+        df_grouped_OH = df.groupby(['DesignNo', 'Color', 'Sizes'], as_index=False)['AvailableforSales'].sum()
 
         # Merging the two dataframes on 'DesignNo', 'Color', and 'Sizes'
         df_merged = pd.merge(df_grouped_sold, df_grouped_OH, on=['DesignNo', 'Color', 'Sizes'], how='inner')
@@ -150,8 +128,8 @@ def show_main_app_page():
         df_pivoted = df_merged.pivot_table(
             index=['DesignNo', 'Color'], 
             columns='Sizes', 
-            values=['NetSales', 'BalanceStock'],
-            aggfunc={'NetSales': 'sum', 'BalanceStock': 'sum'}
+            values=['NetSales', 'AvailableforSales'],
+            aggfunc={'NetSales': 'sum', 'AvailableforSales': 'sum'}
         )
     elif filter_type == 'Price':
         df_pivoted = df_merged.pivot_table(
@@ -165,10 +143,10 @@ def show_main_app_page():
         df_pivoted = df_pivoted.applymap(lambda x: int(x) if pd.notna(x) else x)
 
 
-    # Add total columns for NetSales/BalanceStock or SalesAmount/RetailAmount
+    # Add total columns for NetSales/AvailableforSales or SalesAmount/RetailAmount
     if filter_type == 'Quantity':
-        # Add columns for total NetSales and total BalanceStock
-        df_pivoted['Total Bal.'] = df_pivoted.filter(like='BalanceStock').sum(axis=1)
+        # Add columns for total NetSales and total AvailableforSales
+        df_pivoted['Total Bal.'] = df_pivoted.filter(like='AvailableforSales').sum(axis=1)
         df_pivoted['Total Sales'] = df_pivoted.filter(like='NetSales').sum(axis=1)
     
         # Calculate the sum of the relevant columns for 'Quantity'
@@ -210,6 +188,7 @@ def show_main_app_page():
 
     # Show the filtered data with sizes as columns and the performance interpretation
     #st.write(f"Showing data for {selected_location} | {selected_category} | {selected_item}")
+    st.write("**Sales and Inventory by Design, Color, and Size**")
     st.dataframe(df_pivoted, use_container_width=True)
 
 
@@ -223,97 +202,153 @@ def show_main_app_page():
         st.write(f"Total Retail Amount: **{total_retail_amount}**")
         st.write(f"Total Sales Amount: **{total_sales_amount}**")
 
+# 2nd Table
 
-    # Step 1: Calculate the sales-to-stock ratio (NetSales / BalanceStock)
+    # Step 1: Calculate the sales-to-stock ratio (NetSales / AvailableforSales)
     if filter_type == 'Quantity':
-        # Ensure Location is in the merged dataframe
-        df_grouped_sold = df.groupby(['Location', 'DesignNo', 'Color', 'Sizes'], as_index=False)['NetSales'].sum()
-        df_grouped_OH = df.groupby(['Location', 'DesignNo', 'Color', 'Sizes'], as_index=False)['BalanceStock'].sum()
+        # Step 1: Group by Barcode and calculate total sales (NetSale) and available for sales for each location
+        df_grouped_sold = df.groupby(['Location', 'DesignNo', 'Color', 'Sizes', 'Barcode'], as_index=False)['NetSales'].sum()
 
-        # Merge the dataframes on 'Location', 'DesignNo', 'Color', and 'Sizes'
-        df_merged = pd.merge(df_grouped_sold, df_grouped_OH, on=['Location', 'DesignNo', 'Color', 'Sizes'], how='inner')
+        # Step 2: Group by Barcode to calculate AvailableforSales for each location
+        df_grouped_OH = df.groupby(['Location', 'DesignNo', 'Color', 'Sizes', 'Barcode'], as_index=False)['AvailableforSales'].sum()
 
-        # Calculate Sales to Stock Ratio
-        df_merged['Sales_to_Stock_Ratio'] = np.where(df_merged['BalanceStock'] == 0, df_merged['NetSales'], df_merged['NetSales'] / df_merged['BalanceStock'])
+        # Step 3: Merge the two DataFrames to have the NetSale and AvailableforSales for each combination of Location, Barcode
+        df_merged = pd.merge(df_grouped_sold, df_grouped_OH, on=['Location', 'DesignNo', 'Color', 'Sizes', 'Barcode'], how='inner')
 
-        # Step 2: Identify locations with low stock and high sales (Need stock)
-        low_stock_high_sales = df_merged[(df_merged['Sales_to_Stock_Ratio'] > 1) & (df_merged['BalanceStock'] < 10)].sort_values(by='Sales_to_Stock_Ratio', ascending=False)
+        # Step 1: Drop duplicate rows based on Barcode, DesignNo, Color, Sizes
+        df_merged_unique = df_merged.drop_duplicates(subset=['Barcode', 'DesignNo', 'Color', 'Sizes'])
 
-        # Step 3: Identify locations with high stock and low sales (Excess stock)
-        high_stock_low_sales = df_merged[df_merged['Sales_to_Stock_Ratio'] < 1].sort_values(by='Sales_to_Stock_Ratio')
 
-        # Step 4: Calculate the quantity to move (Desired Stock Level - Current Stock) for locations that need restocking
-        #desired_stock_level = 3  # You can adjust this threshold based on your needs
-        #low_stock_high_sales['Quantity_to_Move'] = desired_stock_level - low_stock_high_sales['BalanceStock']
-   
-        # Get today's date
-        today = datetime.today()
-        day_of_month = today.day
+        # Step 1: Group the data by Barcode, DesignNo, Color, Sizes, and Location
+        df_grouped = df_merged_unique.groupby(['Barcode', 'DesignNo', 'Color', 'Sizes', 'Location'], as_index=False).agg({
+            'NetSales': 'sum',
+            'AvailableforSales': 'sum'
+        })
 
-        # Calculate the week of the month
-        week_of_month = (day_of_month - 1) // 7 + 1  # Calculate which week of the month we are in
+        # Step 2: Create new columns for each location's NetSales and AvailableforSales
+        # List of unique locations
+        locations = df_grouped['Location'].unique()
 
-        # Adjust desired stock level based on the week of the month
-        if week_of_month == 1:
-            desired_stock_level = 12
-        elif week_of_month == 2:    
-            desired_stock_level = 10
-        elif week_of_month == 3:    
-            desired_stock_level = 6
-        else:    
-            desired_stock_level = 4
+        # Create empty columns for each location's NetSales and AvailableforSales
+        for loc in locations:
+            # Extract the data for each location
+            loc_net_sales = df_grouped[df_grouped['Location'] == loc][['Barcode', 'DesignNo', 'Color', 'Sizes', 'NetSales']].rename(columns={'NetSales': f'{loc} (Net Sales)'})
+            loc_avail_sales = df_grouped[df_grouped['Location'] == loc][['Barcode', 'DesignNo', 'Color', 'Sizes', 'AvailableforSales']].rename(columns={'AvailableforSales': f'{loc} (Available for Sales)'})
+    
+            # Merge them into the main DataFrame (on Barcode, DesignNo, Color, Sizes)
+            df_grouped = pd.merge(df_grouped, loc_net_sales[['Barcode', 'DesignNo', 'Color', 'Sizes', f'{loc} (Net Sales)']], on=['Barcode', 'DesignNo', 'Color', 'Sizes'], how='left')
+            df_grouped = pd.merge(df_grouped, loc_avail_sales[['Barcode', 'DesignNo', 'Color', 'Sizes', f'{loc} (Available for Sales)']], on=['Barcode', 'DesignNo', 'Color', 'Sizes'], how='left')
 
-        low_stock_high_sales['Quantity_to_Move'] = desired_stock_level - low_stock_high_sales['BalanceStock']
+        # Step 3: Drop the original 'NetSales' and 'AvailableforSales' and 'Location' columns if needed
+        df_grouped = df_grouped.drop(columns=['NetSales', 'AvailableforSales', 'Location'])
 
-        # Step 5: Calculate the excess stock for high-stock low-sales locations
-        high_stock_low_sales['Excess_Stock'] = high_stock_low_sales['BalanceStock'] - desired_stock_level
-        high_stock_low_sales = high_stock_low_sales[high_stock_low_sales['Excess_Stock'] > 0]  # Filter only those with excess stock
+        # Step 4: Display the result (for Streamlit)
+        st.write("**Sales and Inventory by Barcode and Location wise**")
+        st.dataframe(df_grouped, use_container_width=True)
 
-        # Step 6: Match excess stock from high-stock low-sales locations to locations that need stock
-        # For simplicity, assume that excess stock from each high-stock location will be distributed evenly
-        total_excess_stock = high_stock_low_sales['Excess_Stock'].sum()
-        total_needed_stock = low_stock_high_sales['Quantity_to_Move'].sum()
-  
-        st.write("")    
+# 3rd Table
 
-        # Calculate the stock that can be moved from high-stock low-sales locations to low-stock high-sales locations
-        if total_excess_stock >= total_needed_stock:
-            st.write("**Awesome! We have more than enough stock to meet the demand, but some locations require stock redistribution!**")
-            stock_to_move = low_stock_high_sales[['Location', 'Quantity_to_Move']].copy()
-        
-            # Check if high_stock_low_sales is not empty before trying to access rows
-            if not high_stock_low_sales.empty:
-                stock_to_move['Stock_Moved_From'] = high_stock_low_sales[['Location']].iloc[0]['Location']  # Assuming stock is moved from the first high-stock location
-            else:
-                stock_to_move['Stock_Moved_From'] = "Not enough stock"
-        
-            #st.write(stock_to_move)
-        else:
-            st.write("**Alert: Stock is insufficient to meet overall demand. Some locations need product reshuffling, and additional stock is required!**")
-            stock_to_move = low_stock_high_sales[['Location', 'Quantity_to_Move']].copy()
-            stock_to_move['Stock_Moved_From'] = "Not enough stock"
-            #st.write(stock_to_move)
+        # Step 1: Aggregate the necessary data in one pass
+        df_grouped = df.groupby(['Location', 'DesignNo', 'Color', 'Sizes', 'Barcode'], as_index=False).agg({
+            'NetSales': 'sum',
+            'AvailableforSales': 'sum'
+        })
 
-        st.write("")
-        # Step 7: Display the location-wise comparison for redistribution
-        st.subheader('Product Redistribution Based on Sales-to-Stock Ratio')
+        # Step 2: Calculate the AvgDaySale (Average Daily Sale) once
+        df_grouped['AvgDaySale'] = ((df_grouped['NetSales'] / 100) * 17).round().astype(int)
 
-        # Display locations with low stock but high sales (need stock replenishment)
-        if not low_stock_high_sales.empty:
-            st.write("**Locations with Low Stock but High Sales (Need Stock Replenishment):**")
-            st.dataframe(low_stock_high_sales[['Location', 'DesignNo', 'Color', 'Sizes', 'BalanceStock', 'NetSales', 'Sales_to_Stock_Ratio', 'Quantity_to_Move']], use_container_width=True)
+        # Step 3: Calculate Excess Stock and Quantity to Move
+        df_grouped['Excess_Stock'] = np.maximum(df_grouped['AvailableforSales'] - df_grouped['AvgDaySale'], 0)
+        df_grouped['Quantity_to_Move'] = np.maximum(df_grouped['AvgDaySale'] - df_grouped['AvailableforSales'], 0)
 
-        # Step 8: Provide actionable insights for stock replenishment
-        if not low_stock_high_sales.empty:
-            st.write("**Actionable Insights**: Move or restock more products to these locations because they are selling well, but they don't have enough stock. This will help prevent stockouts and lost sales.")
+        # Step 4: Prepare final_data for the first table (Excess Stock and Quantity to Move by Barcode and Location)
+        final_data = []
 
-        # Display locations with high stock but low sales (Consider redistributing stock)
-        if not high_stock_low_sales.empty:
-            st.write("**Locations with High Stock but Low Sales (Consider Redistributing Stock):**")
-            st.dataframe(high_stock_low_sales[['Location', 'DesignNo', 'Color', 'Sizes', 'BalanceStock', 'NetSales', 'Sales_to_Stock_Ratio', 'Excess_Stock']], use_container_width=True)
+        # For each unique barcode, create the table row
+        for barcode in df_grouped['Barcode'].unique():
+            barcode_data = df_grouped[df_grouped['Barcode'] == barcode]
+            design_no, color, sizes = barcode_data[['DesignNo', 'Color', 'Sizes']].iloc[0]  # Assuming these are the same for all rows
 
-        if not high_stock_low_sales.empty:
-            st.write("**Actionable Insights**: Consider moving some of the excess stock from these locations to places with higher sales. This helps optimize the inventory and reduces overstocking in less-performing areas.")
+            # Initialize the row with barcode, design_no, color, and sizes
+            row = [barcode, design_no, color, sizes]
+
+            # For each location, append the Excess Stock and Quantity to Move for this barcode
+            locations = df_grouped['Location'].unique()
+            for location in locations:
+                location_data = barcode_data[barcode_data['Location'] == location]
+                excess_at_location = location_data['Excess_Stock'].sum()
+                quantity_at_location = location_data['Quantity_to_Move'].sum()
+                row.append(excess_at_location)
+                row.append(quantity_at_location)
+
+            # Add the row to final data
+            final_data.append(row)
+
+        # Step 5: Create the final DataFrame for the first table
+        columns = ['Barcode', 'DesignNo', 'Color', 'Sizes']
+        for loc in locations:
+            columns.append(f'{loc} (Excess Stock)')
+            columns.append(f'{loc} (Quantity to Move)')
+
+        final_df = pd.DataFrame(final_data, columns=columns)
+
+        # Display the first table
+        st.write("**Excess Stock and Quantity to Move by Barcode and Location**")
+        st.dataframe(final_df, use_container_width=True)
+
+
+# 4th Table
+
+        # Step 6: Prepare final_data for the second table (Transfers)
+        final_data_transfers = []
+
+        # For each barcode, create the transfer table
+        for barcode in df_grouped['Barcode'].unique():
+            barcode_data = df_grouped[df_grouped['Barcode'] == barcode]
+            design_no, color, sizes = barcode_data[['DesignNo', 'Color', 'Sizes']].iloc[0]  # Assuming these are the same for all rows
+
+            # Identify the locations with excess stock and quantity to move
+            excess_locations = barcode_data[barcode_data['Excess_Stock'] > 0]
+            move_locations = barcode_data[barcode_data['Quantity_to_Move'] > 0]
+
+            # Iterate over move locations to generate transfer details
+            for _, move_location in move_locations.iterrows():
+                required_qty = move_location['Quantity_to_Move']
+                move_loc = move_location['Location']
+
+                # For each transfer, find the corresponding excess location
+                for _, excess_location in excess_locations.iterrows():
+                    excess_qty = excess_location['Excess_Stock']
+                    excess_loc = excess_location['Location']
+
+                    # If there is enough excess stock to transfer
+                    if excess_qty > 0 and required_qty > 0:
+                        transfer_qty = min(excess_qty, required_qty)
+
+                        if transfer_qty > 0.5:
+                            # Create a new row for this transfer
+                            row = [barcode, design_no, color, sizes, excess_loc, move_loc, transfer_qty]
+
+                            # Add the row to final data for transfers table
+                            final_data_transfers.append(row)
+
+                            # Update excess stock and required quantity
+                            excess_locations.loc[excess_location.name, 'Excess_Stock'] -= transfer_qty
+                            barcode_data.loc[move_location.name, 'Quantity_to_Move'] -= transfer_qty
+
+                            required_qty -= transfer_qty
+                            if required_qty == 0:
+                                break  # No need to transfer more from this location
+
+        # Step 7: Create the final DataFrame for transfers
+        columns_transfers = ['Barcode', 'DesignNo', 'Color', 'Sizes', 'From Location', 'To Location', 'Quantity']
+        final_df_transfers = pd.DataFrame(final_data_transfers, columns=columns_transfers)
+
+        # Display the transfers table
+        st.write("**Stock Transfer Information (Excess Stock -> Location to Move)**")
+        # Display the dataframe
+        st.dataframe(final_df_transfers, use_container_width=True)
+
 
     elif filter_type == 'Price':
         # Show a message when Price filter is selected
@@ -365,14 +400,14 @@ def show_main_app_page():
         if df.empty:
             st.write("No data available for the selected filters.")
         else:
-            # Group the data by 'Location' and sum 'NetSales' and 'BalanceStock'
-            location_comparison = df.groupby('Location')[['NetSales', 'BalanceStock']].sum()
+            # Group the data by 'Location' and sum 'NetSales' and 'AvailableforSales'
+            location_comparison = df.groupby('Location')[['NetSales', 'AvailableforSales']].sum()
 
             # Create a figure and axis for the plot
             fig, ax = plt.subplots(figsize=(10, 6))  # Customize the figure size
 
-            # Define specific colors for BalanceStock and NetSales
-            colors = ['#4CAF50', '#FF9800']  # Green for BalanceStock, Orange for NetSales
+            # Define specific colors for AvailableforSales and NetSales
+            colors = ['#4CAF50', '#FF9800']  # Green for AvailableforSales, Orange for NetSales
 
             # Plot the stacked bar chart with specified colors
             location_comparison.plot(kind='bar', ax=ax, color=colors)
@@ -443,8 +478,8 @@ def show_main_app_page():
             # Create a figure and axis for the plot
             fig, ax = plt.subplots(figsize=(10, 6))  # Customize the figure size
 
-            # Define specific colors for BalanceStock and NetSales
-            colors = ['#4CAF50', '#FF9800']  # Green for BalanceStock, Orange for NetSales
+            # Define specific colors for AvailableforSales and NetSales
+            colors = ['#4CAF50', '#FF9800']  # Green for AvailableforSales, Orange for NetSales
 
             # Plot the stacked bar chart with specified colors
             location_comparison_price.plot(kind='bar', ax=ax, color=colors)
