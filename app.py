@@ -10,7 +10,20 @@ st.set_page_config(layout="wide")
 
 st.markdown("""
     <style>
-        .css-1q7xtu2, .css-1v0mbdj, .css-1ytij9s, .css-ffhzg2 {
+        /* Hide GitHub badge */
+        .css-1q7xtu2 {
+            display: none;
+        }
+        /* Hide star button */
+        .css-1v0mbdj {
+            display: none;
+        }
+        /* Hide 3 dots menu */
+        .css-1ytij9s {
+            display: none;
+        }
+        /* Hide Streamlit footer */
+        footer {
             display: none;
         }
     </style>
