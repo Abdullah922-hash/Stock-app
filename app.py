@@ -5,6 +5,15 @@ import seaborn as sns
 import numpy as np
 from datetime import datetime
 
+st.markdown("""
+    <style>
+        .css-1q7xtu2, .css-1v0mbdj, .css-1ytij9s, .css-ffhzg2 {
+            display: none;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+
 st.set_page_config(layout="wide")
 
 
