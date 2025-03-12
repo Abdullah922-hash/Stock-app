@@ -12,7 +12,7 @@ st.set_page_config(layout="wide")
 @st.cache_data
 def load_data():
     # Load your data from the CSV file
-    df = pd.read_csv('stock.csv')  # Make sure to replace 'stock_report_feb2025.csv' with your file path
+    df = pd.read_csv('stock1.csv')  # Make sure to replace 'stock_report_feb2025.csv' with your file path
     return df
 
 
@@ -40,7 +40,7 @@ def show_login_page():
 # Main App Page
 def show_main_app_page():
     st.markdown("""
-    <h2 style='color: #2a9d8f;'>Inventory Management Application - 11th March 2025</h1>
+    <h2 style='color: #2a9d8f;'>Inventory Management Application - 12th March 2025</h1>
     """, unsafe_allow_html=True)
 
     # Load data
