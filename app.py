@@ -346,8 +346,13 @@ def show_main_app_page():
 
         # Display the transfers table
         st.write("**Stock Transfer Information (Excess Stock -> Location to Move)**")
-        # Display the dataframe
-        st.dataframe(final_df_transfers, use_container_width=True)
+        # Check if the final_data_transfers is empty
+        if final_data_transfers:
+            # Display the dataframe
+            st.dataframe(final_df_transfers, use_container_width=True)
+        else:
+            # Display a message if no action is needed
+            st.write("No action needed!")
 
 
     elif filter_type == 'Price':
