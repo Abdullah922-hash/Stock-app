@@ -10,32 +10,10 @@ st.set_page_config(layout="wide")
 
 # Load the CSV data
 @st.cache_data
-#def load_data():
-    # Load your data from the CSV file
-#    df = pd.read_csv('https://raw.githubusercontent.com/Abdullah922-hash/Stock-app/main/stock1.csv')  # Make sure to replace 'stock_report_feb2025.csv' with your file path
-#    return df
-
-
-
-@st.cache_data
 def load_data():
-    url = 'https://raw.githubusercontent.com/Abdullah922-hash/Stock-app/main/stock1.csv'
-    headers = {
-        "User-Agent": "Mozilla/5.0"  # Spoof a real browser
-    }
-
-    try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()  # Raise HTTPError for bad status codes
-        df = pd.read_csv(io.StringIO(response.text))
-        return df
-    except requests.exceptions.HTTPError as e:
-        st.error(f"HTTP error: {e}")
-    except requests.exceptions.RequestException as e:
-        st.error(f"Request failed: {e}")
-    except Exception as e:
-        st.error(f"Unexpected error: {e}")
-
+    # Load your data from the CSV file
+    df = pd.read_csv('https://raw.githubusercontent.com/Abdullah922-hash/Stock-app/main/stock1.csv')  # Make sure to replace 'stock_report_feb2025.csv' with your file path
+    return df
 
 
 
@@ -62,7 +40,7 @@ def show_login_page():
 # Main App Page
 def show_main_app_page():
     st.markdown("""
-    <h2 style='color: #2a9d8f;'>Inventory Management Application - 10th April 2025</h1>
+    <h2 style='color: #2a9d8f;'>Inventory Management Application - 15th March 2025</h1>
     """, unsafe_allow_html=True)
 
     # Load data
