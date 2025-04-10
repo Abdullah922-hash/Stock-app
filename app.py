@@ -12,7 +12,7 @@ st.set_page_config(layout="wide")
 @st.cache_data
 def load_data():
     # Load your data from the CSV file
-    df = pd.read_csv('stock1.csv')  # Make sure to replace 'stock_report_feb2025.csv' with your file path
+    df = pd.read_csv('https://raw.githubusercontent.com/Abdullah922-hash/Stock-app/main/stockupdated2.csv')  # Make sure to replace 'stock_report_feb2025.csv' with your file path
     return df
 
 
