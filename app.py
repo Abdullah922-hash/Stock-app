@@ -12,7 +12,7 @@ st.set_page_config(layout="wide")
 @st.cache_data
 def load_data():
     # Load your data from the CSV file
-    df = pd.read_csv('https://raw.githubusercontent.com/Abdullah922-hash/Stock-app/main/stock1.csv')
+    df = pd.read_csv('https://raw.githubusercontent.com/Abdullah922-hash/Stock-app/main/stockupdated.csv')  # Make sure to replace 'stock_report_feb2025.csv' with your file path
     return df
 
 
@@ -40,7 +40,7 @@ def show_login_page():
 # Main App Page
 def show_main_app_page():
     st.markdown("""
-    <h2 style='color: #2a9d8f;'>Inventory Management Application - 12th March 2025</h1>
+    <h2 style='color: #2a9d8f;'>Inventory Management Application - 15th March 2025</h1>
     """, unsafe_allow_html=True)
 
     # Load data
@@ -88,14 +88,15 @@ def show_main_app_page():
         df = df[df['ItemName'].isin(selected_item)]
 
 
+
 # 1st Table
 
     # Group by 'DesignNo', 'Color', and 'Sizes', and sum the 'NetSales' and 'AvailableforSales'
-    df_grouped_sold = df.groupby(['DesignNo', 'Color', 'Sizes'], as_index=False)['NetSales'].sum()
-    df_grouped_OH = df.groupby(['DesignNo', 'Color', 'Sizes'], as_index=False)['AvailableforSales'].sum()
+    df_grouped_sold = df.groupby(['Barcode', 'ItemName', 'DesignNo', 'Color', 'Sizes'], as_index=False)['NetSales'].sum()
+    df_grouped_OH = df.groupby(['Barcode', 'ItemName', 'DesignNo', 'Color', 'Sizes'], as_index=False)['AvailableforSales'].sum()
 
     # Merge the two dataframes on 'DesignNo', 'Color', and 'Sizes'
-    df_merged = pd.merge(df_grouped_sold, df_grouped_OH, on=['DesignNo', 'Color', 'Sizes'], how='inner')
+    df_merged = pd.merge(df_grouped_sold, df_grouped_OH, on=['Barcode', 'ItemName', 'DesignNo', 'Color', 'Sizes'], how='inner')
 
 
 
@@ -106,19 +107,19 @@ def show_main_app_page():
     # Quantity or Price grouping logic
     if filter_type == 'Quantity':
         # Group by 'DesignNo', 'Color', 'Sizes', and 'SalesThrough', and sum the 'NetSales' and 'AvailableforSales'
-        df_grouped_sold = df.groupby(['DesignNo', 'Color', 'Sizes'], as_index=False)['NetSales'].sum()
-        df_grouped_OH = df.groupby(['DesignNo', 'Color', 'Sizes'], as_index=False)['AvailableforSales'].sum()
+        df_grouped_sold = df.groupby(['Barcode', 'ItemName', 'DesignNo', 'Color', 'Sizes'], as_index=False)['NetSales'].sum()
+        df_grouped_OH = df.groupby(['Barcode', 'ItemName', 'DesignNo', 'Color', 'Sizes'], as_index=False)['AvailableforSales'].sum()
 
         # Merging the two dataframes on 'DesignNo', 'Color', and 'Sizes'
-        df_merged = pd.merge(df_grouped_sold, df_grouped_OH, on=['DesignNo', 'Color', 'Sizes'], how='inner')
+        df_merged = pd.merge(df_grouped_sold, df_grouped_OH, on=['Barcode', 'ItemName', 'DesignNo', 'Color', 'Sizes'], how='inner')
 
     elif filter_type == 'Price':
         # Group by 'DesignNo', 'Color', 'Sizes', and 'SalesThrough', and sum the 'SaleAmount' and 'RetailAmount'
-        df_grouped_sold = df.groupby(['DesignNo', 'Color', 'Sizes'], as_index=False)['SalesAmount'].sum()
-        df_grouped_OH = df.groupby(['DesignNo', 'Color', 'Sizes'], as_index=False)['RetailAmount'].sum()
+        df_grouped_sold = df.groupby(['Barcode', 'ItemName', 'DesignNo', 'Color', 'Sizes'], as_index=False)['SalesAmount'].sum()
+        df_grouped_OH = df.groupby(['Barcode', 'ItemName', 'DesignNo', 'Color', 'Sizes'], as_index=False)['RetailAmount'].sum()
 
         # Merging the two dataframes on 'DesignNo', 'Color', and 'Sizes'
-        df_merged = pd.merge(df_grouped_sold, df_grouped_OH, on=['DesignNo', 'Color', 'Sizes'], how='inner')
+        df_merged = pd.merge(df_grouped_sold, df_grouped_OH, on=['Barcode', 'ItemName', 'DesignNo', 'Color', 'Sizes'], how='inner')
 
 
 
@@ -126,14 +127,14 @@ def show_main_app_page():
     # Create the pivot table with the correct aggregation (based on Quantity or Price)
     if filter_type == 'Quantity':
         df_pivoted = df_merged.pivot_table(
-            index=['DesignNo', 'Color'], 
+            index=['Barcode', 'ItemName', 'DesignNo', 'Color'], 
             columns='Sizes', 
             values=['NetSales', 'AvailableforSales'],
             aggfunc={'NetSales': 'sum', 'AvailableforSales': 'sum'}
         )
     elif filter_type == 'Price':
         df_pivoted = df_merged.pivot_table(
-            index=['DesignNo', 'Color'], 
+            index=['Barcode', 'ItemName', 'DesignNo', 'Color'], 
             columns='Sizes', 
             values=['SalesAmount', 'RetailAmount'],
             aggfunc={'SalesAmount': 'sum', 'RetailAmount': 'sum'}
@@ -188,116 +189,39 @@ def show_main_app_page():
 
     # Show the filtered data with sizes as columns and the performance interpretation
     #st.write(f"Showing data for {selected_location} | {selected_category} | {selected_item}")
-    st.write("**Sales and Inventory by Design, Color, and Size**")
+    st.write("**Sales and Inventory by Item Name, Design No., Color, and Size**")
     st.dataframe(df_pivoted, use_container_width=True)
 
 
     if filter_type == 'Quantity':
-    # Display the sum below the table using st.write
-        st.write(f"Total Balance Stock: **{total_balance_stock}**")
-        st.write(f"Total Net Sales: **{total_net_sales}**")
+        # Display the sum below the table using st.write
+        st.write(f"Total Balance Stock: **{total_balance_stock:,.0f}**")
+        st.write(f"Total Net Sales: **{total_net_sales:,.0f}**")
 
     elif filter_type == 'Price':
-    # Display the sum below the table using st.write
-        st.write(f"Total Retail Amount: **{total_retail_amount}**")
-        st.write(f"Total Sales Amount: **{total_sales_amount}**")
+        # Display the sum below the table using st.write
+        st.write(f"Total Retail Amount: **{total_retail_amount:,.2f}**")
+        st.write(f"Total Sales Amount: **{total_sales_amount:,.2f}**")
+
+
 
 # 2nd Table
 
     # Step 1: Calculate the sales-to-stock ratio (NetSales / AvailableforSales)
     if filter_type == 'Quantity':
-        # Step 1: Group by Barcode and calculate total sales (NetSale) and available for sales for each location
-        df_grouped_sold = df.groupby(['Location', 'DesignNo', 'Color', 'Sizes', 'Barcode'], as_index=False)['NetSales'].sum()
-
-        # Step 2: Group by Barcode to calculate AvailableforSales for each location
-        df_grouped_OH = df.groupby(['Location', 'DesignNo', 'Color', 'Sizes', 'Barcode'], as_index=False)['AvailableforSales'].sum()
-
-        # Step 3: Merge the two DataFrames to have the NetSale and AvailableforSales for each combination of Location, Barcode
-        df_merged = pd.merge(df_grouped_sold, df_grouped_OH, on=['Location', 'DesignNo', 'Color', 'Sizes', 'Barcode'], how='inner')
-
-        # Step 1: Drop duplicate rows based on Barcode, DesignNo, Color, Sizes
-        df_merged_unique = df_merged.drop_duplicates(subset=['Barcode', 'DesignNo', 'Color', 'Sizes'])
-
-
-        # Step 1: Group the data by Barcode, DesignNo, Color, Sizes, and Location
-        df_grouped = df_merged_unique.groupby(['Barcode', 'DesignNo', 'Color', 'Sizes', 'Location'], as_index=False).agg({
-            'NetSales': 'sum',
-            'AvailableforSales': 'sum'
-        })
-
-        # Step 2: Create new columns for each location's NetSales and AvailableforSales
-        # List of unique locations
-        locations = df_grouped['Location'].unique()
-
-        # Create empty columns for each location's NetSales and AvailableforSales
-        for loc in locations:
-            # Extract the data for each location
-            loc_net_sales = df_grouped[df_grouped['Location'] == loc][['Barcode', 'DesignNo', 'Color', 'Sizes', 'NetSales']].rename(columns={'NetSales': f'{loc} (Net Sales)'})
-            loc_avail_sales = df_grouped[df_grouped['Location'] == loc][['Barcode', 'DesignNo', 'Color', 'Sizes', 'AvailableforSales']].rename(columns={'AvailableforSales': f'{loc} (Available for Sales)'})
     
-            # Merge them into the main DataFrame (on Barcode, DesignNo, Color, Sizes)
-            df_grouped = pd.merge(df_grouped, loc_net_sales[['Barcode', 'DesignNo', 'Color', 'Sizes', f'{loc} (Net Sales)']], on=['Barcode', 'DesignNo', 'Color', 'Sizes'], how='left')
-            df_grouped = pd.merge(df_grouped, loc_avail_sales[['Barcode', 'DesignNo', 'Color', 'Sizes', f'{loc} (Available for Sales)']], on=['Barcode', 'DesignNo', 'Color', 'Sizes'], how='left')
-
-        # Step 3: Drop the original 'NetSales' and 'AvailableforSales' and 'Location' columns if needed
-        df_grouped = df_grouped.drop(columns=['NetSales', 'AvailableforSales', 'Location'])
-
-        # Step 4: Display the result (for Streamlit)
-        st.write("**Sales and Inventory by Barcode and Location wise**")
-        st.dataframe(df_grouped, use_container_width=True)
-
-# 3rd Table
-
         # Step 1: Aggregate the necessary data in one pass
-        df_grouped = df.groupby(['Location', 'DesignNo', 'Color', 'Sizes', 'Barcode'], as_index=False).agg({
+        df_grouped = df.groupby(['Location', 'DesignNo', 'Color', 'Sizes', 'Barcode', 'ItemName'], as_index=False).agg({
             'NetSales': 'sum',
             'AvailableforSales': 'sum'
         })
 
         # Step 2: Calculate the AvgDaySale (Average Daily Sale) once
-        df_grouped['AvgDaySale'] = ((df_grouped['NetSales'] / 100) * 17).round().astype(int)
+        df_grouped['AvgDaySale'] = ((df_grouped['NetSales'] / 90) * 15).round().astype(int)
 
         # Step 3: Calculate Excess Stock and Quantity to Move
         df_grouped['Excess_Stock'] = np.maximum(df_grouped['AvailableforSales'] - df_grouped['AvgDaySale'], 0)
         df_grouped['Quantity_to_Move'] = np.maximum(df_grouped['AvgDaySale'] - df_grouped['AvailableforSales'], 0)
-
-        # Step 4: Prepare final_data for the first table (Excess Stock and Quantity to Move by Barcode and Location)
-        final_data = []
-
-        # For each unique barcode, create the table row
-        for barcode in df_grouped['Barcode'].unique():
-            barcode_data = df_grouped[df_grouped['Barcode'] == barcode]
-            design_no, color, sizes = barcode_data[['DesignNo', 'Color', 'Sizes']].iloc[0]  # Assuming these are the same for all rows
-
-            # Initialize the row with barcode, design_no, color, and sizes
-            row = [barcode, design_no, color, sizes]
-
-            # For each location, append the Excess Stock and Quantity to Move for this barcode
-            locations = df_grouped['Location'].unique()
-            for location in locations:
-                location_data = barcode_data[barcode_data['Location'] == location]
-                excess_at_location = location_data['Excess_Stock'].sum()
-                quantity_at_location = location_data['Quantity_to_Move'].sum()
-                row.append(excess_at_location)
-                row.append(quantity_at_location)
-
-            # Add the row to final data
-            final_data.append(row)
-
-        # Step 5: Create the final DataFrame for the first table
-        columns = ['Barcode', 'DesignNo', 'Color', 'Sizes']
-        for loc in locations:
-            columns.append(f'{loc} (Excess Stock)')
-            columns.append(f'{loc} (Quantity to Move)')
-
-        final_df = pd.DataFrame(final_data, columns=columns)
-
-        # Display the first table
-        st.write("**Excess Stock and Quantity to Move by Barcode and Location**")
-        st.dataframe(final_df, use_container_width=True)
-
-
-# 4th Table
 
         # Step 6: Prepare final_data for the second table (Transfers)
         final_data_transfers = []
@@ -305,7 +229,7 @@ def show_main_app_page():
         # For each barcode, create the transfer table
         for barcode in df_grouped['Barcode'].unique():
             barcode_data = df_grouped[df_grouped['Barcode'] == barcode]
-            design_no, color, sizes = barcode_data[['DesignNo', 'Color', 'Sizes']].iloc[0]  # Assuming these are the same for all rows
+            design_no, color, sizes, item_name = barcode_data[['DesignNo', 'Color', 'Sizes', 'ItemName']].iloc[0]  # Assuming these are the same for all rows
 
             # Identify the locations with excess stock and quantity to move
             excess_locations = barcode_data[barcode_data['Excess_Stock'] > 0]
@@ -327,7 +251,7 @@ def show_main_app_page():
 
                         if transfer_qty > 0.5:
                             # Create a new row for this transfer
-                            row = [barcode, design_no, color, sizes, excess_loc, move_loc, transfer_qty]
+                            row = [barcode, item_name, design_no, color, sizes, excess_loc, move_loc, transfer_qty]
 
                             # Add the row to final data for transfers table
                             final_data_transfers.append(row)
@@ -341,18 +265,82 @@ def show_main_app_page():
                                 break  # No need to transfer more from this location
 
         # Step 7: Create the final DataFrame for transfers
-        columns_transfers = ['Barcode', 'DesignNo', 'Color', 'Sizes', 'From Location', 'To Location', 'Quantity']
+        columns_transfers = ['Barcode', 'ItemName', 'DesignNo', 'Color', 'Sizes', 'From Location', 'To Location', 'Quantity']
         final_df_transfers = pd.DataFrame(final_data_transfers, columns=columns_transfers)
 
         # Display the transfers table
         st.write("**Stock Transfer Information (Excess Stock -> Location to Move)**")
-        # Check if the final_data_transfers is empty
-        if final_data_transfers:
-            # Display the dataframe
-            st.dataframe(final_df_transfers, use_container_width=True)
-        else:
-            # Display a message if no action is needed
-            st.write("No action needed!")
+        # Display the dataframe
+        st.dataframe(final_df_transfers, use_container_width=True)
+
+        # Calculate total quantity to move (sum of the 'Quantity' column)
+        total_quantity_to_move = final_df_transfers['Quantity'].sum()
+
+        # Display the total quantity to move below the dataframe
+        st.write(f"**Total Quantity to Move**: {total_quantity_to_move:.2f}")
+
+
+# 5th Table 
+
+        # Step 2: Calculate the AvgDaySale (Average Daily Sale) based on DaysInstore condition
+        df['AvgDaySale'] = df.apply(
+            lambda row: round((row['NetSales'] / row['DaysInStore'] if row['DaysInStore'] < 90 else row['NetSales'] / 90), 2), axis=1
+        )
+
+
+
+        # First, perform the groupby and aggregation
+        df_balance = df.groupby('Barcode').agg({
+            'ItemName': lambda x: x.mode()[0],   # Mode (most frequent value) of ItemName
+            'DesignNo': lambda x: x.mode()[0],   # Mode (most frequent value) of DesignNo
+            'Color': lambda x: x.mode()[0],      # Mode (most frequent value) of Color
+            'Sizes': lambda x: x.mode()[0],      # Mode (most frequent value) of Sizes
+            'NetSales': 'sum',                   # Sum of NetSales
+            'AvailableforSales': 'sum',          # Sum of AvailableforSales
+            'AvgDaySale': 'mean',                # Mean of AvgDaySale
+            'DaysInStore': 'mean',               # Mean of DaysInStore
+        }).reset_index()
+
+
+        # Ensure DaysInStore mean is rounded to 2 decimal places
+        df_balance['DaysInStore'] = df_balance['DaysInStore'].round(2)
+
+        df_balance['AvgDaySale'] = df_balance['AvgDaySale'].round(4)
+        
+        # Calculate StockDaysLeft
+        df_balance['StockDaysLeft'] = df_balance.apply(
+            lambda row: round(row['AvailableforSales'] / row['AvgDaySale'], 2) if row['AvgDaySale'] > 0 else 'Sales Not Yet Started', axis=1
+        )
+
+        # Update Status based on StockDaysLeft
+        df_balance['Status'] = df_balance['StockDaysLeft'].apply(
+            lambda x: 'Need Additional Stock' if isinstance(x, (int, float)) and x < 90 else 
+                    ('Sales Pending' if x == 'Sales Not Yet Started' else 'No Need')
+        )
+
+        # Calculate Need Qty based on Status
+        df_balance['Need Qty'] = df_balance.apply(        
+            lambda row: round((90 - row['StockDaysLeft']) * row['AvgDaySale'], 2) if row['Status'] == 'Need Additional Stock' and isinstance(row['StockDaysLeft'], (int, float)) and row['StockDaysLeft'] < 90 else 
+                        ("Sales Pending - Awaiting Qty" if row['Status'] == 'Sales Pending' else 0), axis=1
+        )
+
+        
+
+        st.write("**Inventory Forecast: Stock Days Left & Replenishment Requirements**")
+        # Display the dataframe
+        st.dataframe(df_balance, use_container_width=True)
+
+        # Calculate total quantity needed (sum of Need Qty where the value is numeric)
+        total_qty_needed = df_balance['Need Qty'].apply(
+            lambda x: x if isinstance(x, (int, float)) else 0
+        ).sum()
+
+
+        # Display the total quantity needed below the dataframe
+        st.write(f"**Total Qty needed to maintain 90 days stock**: {total_qty_needed:.2f}")
+        
+
+
 
 
     elif filter_type == 'Price':
@@ -428,6 +416,16 @@ def show_main_app_page():
                             ha='center', va='center', 
                             fontsize=10, color='black', 
                             xytext=(0, 10), textcoords='offset points')
+                
+            # Calculate the total sales and retail amount
+            total_saleqty = location_comparison['NetSales'].sum()
+            total_stock = location_comparison['AvailableforSales'].sum()
+
+            # Add the totals in the upper-right corner
+            ax.annotate(f'Total Sales Qty: {total_saleqty:,.2f}', xy=(1, 0.98), xycoords='axes fraction', 
+                        ha='right', va='top', fontsize=12, color='green', fontweight='bold')
+            ax.annotate(f'Total Stock Qty: {total_stock:,.2f}', xy=(1, 0.94), xycoords='axes fraction', 
+                        ha='right', va='top', fontsize=12, color='orange', fontweight='bold')
 
             # Set legend to be in a consistent order
             ax.legend(['Net Sales', 'Balance Stock'], loc='upper left')
@@ -500,7 +498,18 @@ def show_main_app_page():
                             ha='center', va='center', 
                             fontsize=10, color='black', 
                             xytext=(0, 10), textcoords='offset points')
-    
+                
+        
+            # Calculate the total sales and retail amount
+            total_sales = location_comparison_price['SalesAmount'].sum()
+            total_retail = location_comparison_price['RetailAmount'].sum()
+
+            # Add the totals in the upper-right corner
+            ax.annotate(f'Total Sales Amount: {total_sales:,.2f}', xy=(1, 0.98), xycoords='axes fraction', 
+                        ha='right', va='top', fontsize=12, color='green', fontweight='bold')
+            ax.annotate(f'Total Retail Amount: {total_retail:,.2f}', xy=(1, 0.94), xycoords='axes fraction', 
+                        ha='right', va='top', fontsize=12, color='orange', fontweight='bold')
+
             # Set legend to be in a consistent order
             ax.legend(['Sales Amount', 'Retail Amount'], loc='upper left')
 
